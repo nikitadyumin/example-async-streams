@@ -1,0 +1,30 @@
+{
+  "name": "example-async-streams",
+  "version": "0.1.0",
+  "description": "experiment on async streams implementation",
+  "main": "src/index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nikitadyumin/example-async-streams.git"
+  },
+  "keywords": [
+    "reactive",
+    "streams",
+    "experiment"
+  ],
+  "author": "Nikita Dyumin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nikitadyumin/example-async-streams/issues"
+  },
+  "homepage": "https://github.com/nikitadyumin/example-async-streams#readme",
+  "dependencies": {
+    "steal": "^0.15.0"
+  }
+}
