@@ -19,6 +19,10 @@ const stream = {
 
             map: fn => stream.create(sink => executor(v => sink(fn(v)))),
 
+            flatMap: function (fn) {
+                return stream.create(sink => executor(v => fn(v).subscribe(sink)));
+            },
+
             filter: pred => stream.create(sink => executor(v => pred(v) ? sink(v) : null)),
 
             merge: stream2 => stream.create(sink => {
@@ -37,11 +41,8 @@ const stream = {
                         runFn(unsub);
                     }
                 });
+                return unsub;
             }),
-
-            flatMap: function (fn) {
-                return stream.create(sink => executor(v => fn(v).subscribe(sink)));
-            },
 
             combine: (...streams) => {
                 const fn = streams.pop();
@@ -54,8 +55,8 @@ const stream = {
                             sink(fn(...values));
                         }
                     };
-                    executor(clb(0));
-                    streams.forEach((s, i)=> s.subscribe(clb(i + 1)));
+                    const unsubs = [executor(clb(0))].concat(streams.map((s, i)=> s.subscribe(clb(i + 1))));
+                    return () => unsubs.forEach(runFn);
                 });
             },
 
@@ -68,8 +69,8 @@ const stream = {
                             sink(values.map(arr => arr.shift()));
                         }
                     };
-                    executor(clb(0));
-                    streams.forEach((s, i) => s.subscribe(clb(i + 1)));
+                    const unsubs = [executor(clb(0))].concat(streams.map((s, i) => s.subscribe(clb(i + 1))));
+                    return () => unsubs.forEach(runFn);
                 });
             }
         };
