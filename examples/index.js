@@ -58,3 +58,12 @@ stream.create(sink => {
     return () => clearInterval(i);
 }).take(5)
     .subscribe(log('8'));
+
+const it$ = stream.fromIterable([1, 2, 3, 4]);
+it$.combine(
+    it$.reduce(0, (x, y) => x + y),
+    (x, y)=> [x, y])
+    .subscribe(log('9'));
+
+stream.create(sink => sink(1)).startWith(0)
+    .subscribe(log('10'));

@@ -25,6 +25,13 @@ const stream = {
 
             filter: pred => stream.create(sink => executor(v => pred(v) ? sink(v) : null)),
 
+            reduce: (seed, fn) => stream.create(sink => executor(v => sink(seed = fn(seed, v)))),
+
+            startWith: v => stream.create(sink => {
+                sink(v);
+                return executor(v => sink(v));
+            }),
+
             merge: stream2 => stream.create(sink => {
                 const unsubs = [
                     executor(sink),
