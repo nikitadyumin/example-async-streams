@@ -19,13 +19,11 @@ const stream = {
 
             map: fn => stream.create(sink => executor(v => sink(fn(v)))),
 
-            flatMap: function (fn) {
-                return stream.create(sink => executor(v => fn(v).subscribe(sink)));
-            },
-
             filter: pred => stream.create(sink => executor(v => pred(v) ? sink(v) : null)),
 
             reduce: (seed, fn) => stream.create(sink => executor(v => sink(seed = fn(seed, v)))),
+
+            flatMap: fn => stream.create(sink => executor(v => fn(v).subscribe(sink))),
 
             startWith: v => stream.create(sink => {
                 sink(v);
