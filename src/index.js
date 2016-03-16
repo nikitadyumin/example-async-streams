@@ -1,6 +1,8 @@
 /**
  * Created by ndyumin on 12.03.2016.
  */
+/* @flow */
+
 "use strict";
 
 const runFn = (fn, ...args) => {
