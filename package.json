@@ -9,6 +9,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "system": {
+    "transpiler": "babel",
+    "babelOptions": {
+      "optional": [
+        "runtime"
+      ],
+      "sourceMap": "inline"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nikitadyumin/example-async-streams.git"
@@ -25,6 +34,7 @@
   },
   "homepage": "https://github.com/nikitadyumin/example-async-streams#readme",
   "dependencies": {
+    "babel-runtime": "^6.6.1",
     "steal": "^0.15.0"
   }
 }

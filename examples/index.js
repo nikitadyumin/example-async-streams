@@ -3,9 +3,7 @@
  */
 "use strict";
 
-console.clear();
-console.log(1);
-const stream = require('../src');
+import stream from '../src/index';
 
 const rand = len => () => +(Math.random() * len).toFixed(2);
 const rand10 = rand(10);
@@ -61,7 +59,7 @@ stream.create(sink => {
 
 const it$ = stream.fromIterable([1, 2, 3, 4]);
 it$.combine(
-    it$.reduce(0, (x, y) => x + y),
+    it$.scan(0, (x, y) => x + y),
     (x, y)=> [x, y])
     .subscribe(log('9'));
 

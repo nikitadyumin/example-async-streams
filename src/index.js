@@ -1,31 +1,77 @@
+/* @flow */
 /**
  * Created by ndyumin on 12.03.2016.
  */
-/* @flow */
 
 "use strict";
+declare interface Observable<T> {
+subscribe (observer:Observer): Subscription;
 
-const runFn = (fn, ...args) => {
-    if (typeof fn === 'function') {
-        fn(...args);
-    }
-};
+map<U> (fn:(x:T) => U): Observable<U>;
 
-const isDefined = x => typeof x !== 'undefined';
-const first = x => x[0];
+filter (predicate: (x: T) => boolean): Observable<T>;
 
-const stream = {
-    create: function (executor) {
+scan<U> (seed:U, fn:(x:U, y:T) => U): Observable<U>;
+
+flatMap<U> (fn:(x:T) => Observable<U>): Observable<U>;
+}
+
+declare interface ObservableModule<T> {
+create (executor:Executor): Observable<T>;
+
+just (value:T): Observable<T>;
+
+fromEvent (el:DomEventEmitter, name:string): Observable;
+
+fromPromise (p:Promise): Observable;
+
+fromIterable (it:Iterable): Observable;
+}
+
+type DomEventEmitter = {
+    addEventListener (name:string, listener:Function) : void;
+    removeEventListener (name:string, listener:Function) : void;
+}
+
+type Executor = (observer:Observer) => Subscription;
+type Subscription  = () => void;
+type Observer = (value:any) => void;
+
+const runFn = (fn:Function):void => fn();
+
+function isDefined(x:any):boolean {
+    return typeof x !== 'undefined';
+}
+
+function first<T> (x:Array<T>):T {
+    return x[0];
+}
+
+const stream:ObservableModule = {
+    create: function<T>(executor):Observable<T> {
         return {
             subscribe: executor,
 
             map: fn => stream.create(sink => executor(v => sink(fn(v)))),
 
-            filter: pred => stream.create(sink => executor(v => pred(v) ? sink(v) : null)),
+            filter: function(predicate: (x: T) => boolean): Observable<T> {
+                return stream.create(sink => executor(v => predicate(v) ? sink(v) : undefined))
+            },
 
-            reduce: (seed, fn) => stream.create(sink => executor(v => sink(seed = fn(seed, v)))),
+            scan: function<U>(seed:U, fn:(x:U, y:T) => U) {
+                return stream.create(sink => executor(y => sink(seed = fn(seed, y))));
+            },
 
-            flatMap: fn => stream.create(sink => executor(v => fn(v).subscribe(sink))),
+            flatMap: function<U> (fn:(x:T) => Observable<U>):Observable<U> {
+                return stream.create(sink => {
+                    const unsubs = [];
+                    unsubs[0] = executor(x => {
+                        unsubs[1] = fn(x).subscribe(sink);
+                    });
+
+                    return () => unsubs.forEach(runFn);
+                })
+            },
 
             startWith: v => stream.create(sink => {
                 sink(v);
@@ -84,7 +130,11 @@ const stream = {
     },
 
     just: function (v) {
-        return stream.create(sink => sink(v));
+        return stream.create(sink => {
+            sink(v);
+            return () => {
+            };
+        });
     },
 
     fromEvent: function (el, event) {
@@ -95,7 +145,11 @@ const stream = {
     },
 
     fromPromise: function (promise) {
-        return stream.create(sink => promise.then(sink))
+        return stream.create(sink => {
+            promise.then(sink);
+            return () => {
+            };
+        })
     },
 
     fromIterable: function (iterable) {
@@ -103,8 +157,10 @@ const stream = {
             for (let v of iterable) {
                 sink(v);
             }
+            return () => {
+            };
         });
     }
 };
 
-module.exports = stream;
+export default stream;
