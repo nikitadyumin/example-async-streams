@@ -1,11 +1,6 @@
 /* @flow */
 "use strict";
 
-type DomEventEmitter = {
-    addEventListener (name:string, listener:Function) : void;
-    removeEventListener (name:string, listener:Function) : void;
-}
-
 type Executor = (observer:Observer) => Subscription;
 type Subscription  = () => void;
 type Observer = (value:any) => void;
@@ -30,7 +25,7 @@ declare class Observable<T> {
 
 declare function create(executor: Executor):Observable;
 declare function just<T>(v: T):Observable<T>;
-declare function fromEvent<T>(el: DomEventEmitter, name: string):Observable<T>;
+declare function fromEvent<T>(el: HTMLElement, name: string):Observable<T>;
 declare function fromPromise<T>(promise: Promise):Observable<T>;
 declare function fromIterable(it: Iterable):Observable;
 
