@@ -3,10 +3,10 @@
 
 type Executor = (observer:Observer) => Subscription;
 type Subscription  = () => void;
-type Observer = (value:any) => void;
+type Observer<T> = (value:T) => void;
 
-declare class Observable<T> {
-    subscribe: (fn:(x:any) => void) => Subscription;
+declare interface Observable<T> {
+    subscribe: (fn:Observer<T>) => Subscription;
 
     map: <U>(fn:(x:T) => U) => Observable<U>;
 
@@ -21,13 +21,17 @@ declare class Observable<T> {
     merge: (s:Observable<T>) => Observable<T>;
 
     take: (n:number) => Observable<T>;
+
+    combine: <U>(fn:(x:T, ...xs:Array<T>) => U, ...Os:Array<Observable<T>>) => Observable<U>;
+
+    zip: <U>(fn:(x:T, ...xs:Array<T>) => U, ...Os:Array<Observable<T>>) => Observable<U>;
 }
 
-declare function create(executor: Executor):Observable;
-declare function just<T>(v: T):Observable<T>;
-declare function fromEvent<T>(el: HTMLElement, name: string):Observable<T>;
-declare function fromPromise<T>(promise: Promise):Observable<T>;
-declare function fromIterable(it: Iterable):Observable;
+declare function create(executor:Executor):Observable;
+declare function just<T>(v:T):Observable<T>;
+declare function fromEvent<T>(el:HTMLElement, name:string):Observable<T>;
+declare function fromPromise<T>(promise:Promise):Observable<T>;
+declare function fromIterable(it:Iterable):Observable;
 
 const runFn = (fn:Function):void => fn();
 
@@ -39,7 +43,7 @@ function first<T> (x:Array<T>):T {
     return x[0];
 }
 
-export function create(executor){
+export function create(executor) {
     return {
         subscribe: executor,
 
@@ -49,7 +53,7 @@ export function create(executor){
 
         filter: (predicate) => create(sink => executor(v => predicate(v) ? sink(v) : undefined)),
 
-        scan: function(seed, fn) {
+        scan: function (seed, fn) {
             return create(sink => executor(y => sink(seed = fn(seed, y))))
         },
 
@@ -88,9 +92,7 @@ export function create(executor){
             return unsub;
         }),
 
-        combine: (...streams) => {
-            const fn = streams.pop();
-
+        combine: (fn, ...streams) => {
             return create(sink => {
                 const values = [];
                 const clb = i => val => {
@@ -104,9 +106,7 @@ export function create(executor){
             });
         },
 
-        zip: (...streams) => {
-            const fn = streams.pop();
-
+        zip: (fn, ...streams) => {
             const values = Array.from({length: streams.length + 1}, () => []);
             return create(sink => {
                 const clb = i => val => {
