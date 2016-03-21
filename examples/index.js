@@ -1,3 +1,4 @@
+/* @flow */
 /**
  * Created by ndyumin on 12.03.2016.
  */
@@ -15,10 +16,15 @@ function* gen(i) {
 }
 
 create(sink => {
-    setTimeout(()=> sink(1));
-    setTimeout(()=> sink(2));
-    setTimeout(()=> sink(3));
-}).map(x => x * 3).filter(x => x % 2 !== 0)
+    const unsubs = [
+        setTimeout(()=> sink(1)),
+        setTimeout(()=> sink(2)),
+        setTimeout(()=> sink(3))
+    ];
+
+    return () => unsubs.forEach(x => clearTimeout(x));
+}).map(x => x * 3)
+    .filter(x => x % 2 !== 0)
     .subscribe(log('1'));
 
 just({a: 123})
@@ -33,16 +39,16 @@ fromPromise(new Promise(res => setTimeout(res, 100, 456)))
 
 fromEvent(document.querySelector('#b1'), 'click').map(rand10)
     .zip(
+        (x, y, z) => [x, y, z],
         fromEvent(document.querySelector('#b2'), 'click').map(rand10),
-        fromEvent(document.querySelector('#b3'), 'click').map(rand10),
-        (x, y, z) => [x, y, z])
+        fromEvent(document.querySelector('#b3'), 'click').map(rand10))
     .subscribe(log('5'));
 
 fromEvent(document.querySelector('#bb1'), 'click').map(rand100)
     .combine(
+        (x, y, z) => [x, y, z],
         fromEvent(document.querySelector('#bb2'), 'click').map(rand100),
-        fromEvent(document.querySelector('#bb3'), 'click').map(rand100),
-        (x, y, z) => [x, y, z])
+        fromEvent(document.querySelector('#bb3'), 'click').map(rand100))
     .subscribe(log('6'));
 
 fromIterable(gen(5))
@@ -59,9 +65,13 @@ create(sink => {
 
 const it$ = fromIterable([1, 2, 3, 4]);
 it$.combine(
-    it$.scan(0, (x, y) => x + y),
-    (x, y)=> [x, y])
+    (x, y)=> [x, y],
+    it$.scan((x, y) => x + y, 0))
     .subscribe(log('9'));
 
-create(sink => sink(1)).startWith(0)
+create(sink => {
+    sink(1);
+    return () => {
+    };
+}).startWith(0)
     .subscribe(log('10'));

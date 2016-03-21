@@ -12,7 +12,7 @@ declare interface Observable<T> {
 
     filter: (predicate:(x:T) => boolean) => Observable<T>;
 
-    scan: <U>(seed:U, fn:(x:U, y:T) => U) => Observable<U>;
+    scan: <U>(fn:(x:U, y:T) => U, seed:U) => Observable<U>;
 
     flatMap: <U>(fn:(v:T) => Observable<U>) => Observable<U>;
 
@@ -53,7 +53,7 @@ export function create(executor) {
 
         filter: (predicate) => create(sink => executor(v => predicate(v) ? sink(v) : undefined)),
 
-        scan: function (seed, fn) {
+        scan: function (fn, seed) {
             return create(sink => executor(y => sink(seed = fn(seed, y))))
         },
 
