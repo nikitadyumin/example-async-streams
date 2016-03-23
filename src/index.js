@@ -70,7 +70,7 @@ export function create(executor) {
 
         startWith: v => create(sink => {
             sink(v);
-            return executor(v => sink(v));
+            return executor(sink);
         }),
 
         merge: stream2 => create(sink => {
