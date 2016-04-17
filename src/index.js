@@ -25,6 +25,8 @@ declare interface Observable<T> {
     combine: <U>(fn:(x:T, ...xs:Array<T>) => U, ...Os:Array<Observable<T>>) => Observable<U>;
 
     zip: <U>(fn:(x:T, ...xs:Array<T>) => U, ...Os:Array<Observable<T>>) => Observable<U>;
+
+    multicast: () => Observable<T>;
 }
 
 declare function create(executor:Executor):Observable;
@@ -117,6 +119,23 @@ export function create(executor) {
                 };
                 const unsubs = [executor(clb(0))].concat(streams.map((s, i) => s.subscribe(clb(i + 1))));
                 return () => unsubs.forEach(runFn);
+            });
+        },
+
+        multicast: () => {
+            const sinks = [];
+            let started = false;
+
+            const broadcast = v => sinks.forEach(fn => fn(v));
+            return create(sink => {
+                sinks.push(sink);
+                if (!started) {
+                    executor(broadcast);
+                    started = true;
+                }
+                return () => {
+                    sinks.splice(sinks.indexOf(sink), 1);
+                };
             });
         }
     };
