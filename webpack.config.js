@@ -4,7 +4,7 @@ module.exports = {
     output: {
         libraryTarget: "umd",
         path: path.join(__dirname, 'dist'),
-        filename: 'bundle.js'
+        filename: 'streams.js'
     },
     module: {
         loaders: [

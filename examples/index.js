@@ -4,7 +4,7 @@
  */
 "use strict";
 
-import {create, just, fromEvent, fromIterable, fromPromise} from '../src/index';
+const {create, just, fromEvent, fromIterable, fromPromise} = require( '../dist/streams' );
 const rand = len => () => +(Math.random() * len).toFixed(2);
 const rand10 = rand(10);
 const rand100 = rand(100);
@@ -75,3 +75,18 @@ create(sink => {
     };
 }).startWith(0)
     .subscribe(log('10'));
+
+const s = create((next) => {
+    setTimeout(next, 100, 1);
+    setTimeout(next, 200, 2);
+    setTimeout(next, 300, 3);
+    setTimeout(next, 400, 4);
+    return () => {};
+}).multicast();
+
+s.subscribe(log('11-1'));
+setTimeout(() => s.subscribe(log('11-2')), 250);
+setTimeout(() => {
+    const sub = s.map(v => v * 10).subscribe(log('11-3'));
+    setTimeout(sub, 100);
+}, 200);
