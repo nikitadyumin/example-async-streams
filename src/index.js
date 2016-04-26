@@ -34,6 +34,7 @@ declare function just<T>(v:T):Observable<T>;
 declare function fromEvent<T>(el:HTMLElement, name:string):Observable<T>;
 declare function fromPromise<T>(promise:Promise):Observable<T>;
 declare function fromIterable(it:Iterable):Observable;
+declare function interval<T>(t: number, v:T):Observable<T>;
 
 const runFn = (fn:Function):void => fn();
 
@@ -146,6 +147,13 @@ export function just(v) {
         sink(v);
         return () => {
         };
+    });
+}
+
+export function interval(t, v) {
+    return create(sink => {
+        const i = setInterval(sink, t, v);
+        return () => clearInterval(i);
     });
 }
 

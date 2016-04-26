@@ -62,6 +62,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	exports.create = create;
 	exports.just = just;
+	exports.interval = interval;
 	exports.fromEvent = fromEvent;
 	exports.fromPromise = fromPromise;
 	exports.fromIterable = fromIterable;
@@ -229,6 +230,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return create(function (sink) {
 	        sink(v);
 	        return function () {};
+	    });
+	}
+
+	function interval(t, v) {
+	    return create(function (sink) {
+	        var i = setInterval(sink, t, v);
+	        return function () {
+	            return clearInterval(i);
+	        };
 	    });
 	}
 
