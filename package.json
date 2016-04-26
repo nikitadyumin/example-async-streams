@@ -1,7 +1,7 @@
 {
-  "name": "example-async-streams",
+  "name": "fobs",
   "version": "0.1.0",
-  "description": "experiment on async streams implementation",
+  "description": "yet another reactive streams implementation",
   "main": "src/index.js",
   "directories": {
     "example": "examples"
@@ -23,9 +23,12 @@
     "url": "git+https://github.com/nikitadyumin/example-async-streams.git"
   },
   "keywords": [
+    "observable",
     "reactive",
-    "streams",
-    "experiment"
+    "frp",
+    "event stream",
+    "stream",
+    "streams"
   ],
   "author": "Nikita Dyumin",
   "license": "MIT",
