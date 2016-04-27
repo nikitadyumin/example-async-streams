@@ -1,8 +1,12 @@
 {
   "name": "fobs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "yet another reactive streams implementation",
-  "main": "src/index.js",
+  "main": "dist/streams.js",
+  "files": [
+    "src",
+    "dist"
+  ],
   "directories": {
     "example": "examples"
   },
