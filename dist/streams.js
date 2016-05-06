@@ -69,8 +69,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
+	var noop = function noop() {};
+
 	var runFn = function runFn(fn) {
-	    return fn();
+	    return typeof fn === 'function' && fn();
 	};
 
 	function isDefined(x) {
@@ -227,15 +229,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function just(v) {
-	    return create(function (sink) {
-	        sink(v);
-	        return function () {};
+	    return create(function (next, error, complete) {
+	        next(v);
+	        runFn(complete);
+	        return noop;
 	    });
 	}
 
 	function interval(t, v) {
-	    return create(function (sink) {
-	        var i = setInterval(sink, t, v);
+	    return create(function (next) {
+	        var i = setInterval(next, t, v);
 	        return function () {
 	            return clearInterval(i);
 	        };
@@ -243,23 +246,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function fromEvent(el, event) {
-	    return create(function (sink) {
-	        el.addEventListener(event, sink);
+	    return create(function (next) {
+	        el.addEventListener(event, next);
 	        return function () {
-	            return el.removeEventListener(event, sink);
+	            return el.removeEventListener(event, next);
 	        };
 	    });
 	}
 
 	function fromPromise(promise) {
-	    return create(function (sink) {
-	        promise.then(sink);
+	    return create(function (next, error, complete) {
+	        promise.then(function (v) {
+	            return next(v), runFn(complete);
+	        }).catch(error);
 	        return function () {};
 	    });
 	}
 
 	function fromIterable(iterable) {
-	    return create(function (sink) {
+	    return create(function (next, error, complete) {
 	        var _iteratorNormalCompletion = true;
 	        var _didIteratorError = false;
 	        var _iteratorError = undefined;
@@ -268,7 +273,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            for (var _iterator = iterable[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 	                var _v = _step.value;
 
-	                sink(_v);
+	                next(_v);
 	            }
 	        } catch (err) {
 	            _didIteratorError = true;
@@ -285,7 +290,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 
-	        return function () {};
+	        runFn(complete);
+	        return noop;
 	    });
 	}
 

@@ -1,12 +1,14 @@
 /* @flow */
 "use strict";
 
-type Executor = (observer:Observer) => Subscription;
+type Executor = (next:Next, error: Error, complete: Complete) => Subscription;
 type Subscription  = () => void;
-type Observer<T> = (value:T) => void;
+type Next<T> = (value:T) => void;
+type Error<E> = (e:E) => void;
+type Complete = () => void;
 
 declare interface Observable<T> {
-    subscribe: (fn:Observer<T>) => Subscription;
+    subscribe: Executor;
 
     map: <U>(fn:(x:T) => U) => Observable<U>;
 
@@ -36,7 +38,9 @@ declare function fromPromise<T>(promise:Promise):Observable<T>;
 declare function fromIterable(it:Iterable):Observable;
 declare function interval<T>(t: number, v:T):Observable<T>;
 
-const runFn = (fn:Function):void => fn();
+const noop = () => {};
+
+const runFn = (fn:Function):void => typeof fn === 'function' && fn();
 
 function isDefined(x:any):boolean {
     return typeof x !== 'undefined';
@@ -143,41 +147,43 @@ export function create(executor) {
 }
 
 export function just(v) {
-    return create(sink => {
-        sink(v);
-        return () => {
-        };
+    return create((next, error, complete) => {
+        next(v);
+        runFn(complete);
+        return noop;
     });
 }
 
 export function interval(t, v) {
-    return create(sink => {
-        const i = setInterval(sink, t, v);
+    return create(next => {
+        const i = setInterval(next, t, v);
         return () => clearInterval(i);
     });
 }
 
 export function fromEvent(el, event) {
-    return create(sink => {
-        el.addEventListener(event, sink);
-        return () => el.removeEventListener(event, sink);
+    return create(next => {
+        el.addEventListener(event, next);
+        return () => el.removeEventListener(event, next);
     });
 }
 
 export function fromPromise(promise) {
-    return create(sink => {
-        promise.then(sink);
+    return create((next, error, complete) => {
+        promise
+            .then(v => (next(v), runFn(complete)))
+            .catch(error);
         return () => {
         };
     })
 }
 
 export function fromIterable(iterable) {
-    return create(sink => {
+    return create((next, error, complete) => {
         for (let v of iterable) {
-            sink(v);
+            next(v);
         }
-        return () => {
-        };
+        runFn(complete);
+        return noop;
     });
 }
