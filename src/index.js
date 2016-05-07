@@ -1,14 +1,14 @@
 /* @flow */
 "use strict";
 
-type Executor = (next:Next, error: Error, complete: Complete) => Subscription;
+type Observer = (next:Next, error: Error, complete: Complete) => Subscription;
 type Subscription  = () => void;
 type Next<T> = (value:T) => void;
 type Error<E> = (e:E) => void;
 type Complete = () => void;
 
 declare interface Observable<T> {
-    subscribe: Executor;
+    subscribe: Observer;
 
     map: <U>(fn:(x:T) => U) => Observable<U>;
 
@@ -31,7 +31,7 @@ declare interface Observable<T> {
     multicast: () => Observable<T>;
 }
 
-declare function create(executor:Executor):Observable;
+declare function create(observer:Observer):Observable;
 declare function just<T>(v:T):Observable<T>;
 declare function fromEvent<T>(el:HTMLElement, name:string):Observable<T>;
 declare function fromPromise<T>(promise:Promise):Observable<T>;
