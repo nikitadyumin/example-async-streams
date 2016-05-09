@@ -64,6 +64,14 @@ export function create(executor) {
             return create(sink => executor(y => sink(seed = fn(seed, y))))
         },
 
+        reduce: function (fn, seed) {
+            return create((next, error, complete) => executor(
+                y => seed = fn(seed, y),
+                noop,
+                () => (next(seed), complete())
+            ));
+        },
+
         flatMap: function (fn) {
             return create(sink => {
                 const unsubs = [];
