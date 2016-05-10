@@ -1,7 +1,7 @@
 /* @flow */
 "use strict";
 
-type Observer = (next:Next, error: Error, complete: Complete) => Subscription;
+type Observer = (next:Next, error:Error, complete:Complete) => Subscription;
 type Subscription  = () => void;
 type Next<T> = (value:T) => void;
 type Error<E> = (e:E) => void;
@@ -36,9 +36,10 @@ declare function just<T>(v:T):Observable<T>;
 declare function fromEvent<T>(el:HTMLElement, name:string):Observable<T>;
 declare function fromPromise<T>(promise:Promise):Observable<T>;
 declare function fromIterable(it:Iterable):Observable;
-declare function interval<T>(t: number, v:T):Observable<T>;
+declare function interval<T>(t:number, v:T):Observable<T>;
 
-const noop = () => {};
+const noop = () => {
+};
 
 const runFn = (fn:Function):void => typeof fn === 'function' && fn();
 
@@ -55,13 +56,27 @@ export function create(executor) {
         subscribe: executor,
 
         map: function (fn) {
-            return create(sink => executor(v => sink(fn(v))))
+            return create((next, error, complete) =>
+                executor(
+                    v => next(fn(v)),
+                    error,
+                    complete
+                )
+            );
         },
 
-        filter: (predicate) => create(sink => executor(v => predicate(v) ? sink(v) : undefined)),
+        filter: (predicate) => create((next, error, complete) => executor(
+            v => predicate(v) ? next(v) : undefined,
+            error,
+            complete
+        )),
 
         scan: function (fn, seed) {
-            return create(sink => executor(y => sink(seed = fn(seed, y))))
+            return create((next, error, complete) => executor(
+                y => next(seed = fn(seed, y)),
+                error,
+                complete
+            ));
         },
 
         reduce: function (fn, seed) {
@@ -73,47 +88,48 @@ export function create(executor) {
         },
 
         flatMap: function (fn) {
-            return create(sink => {
+            return create((next, error, complete) => {
                 const unsubs = [];
                 unsubs[0] = executor(x => {
-                    unsubs[1] = fn(x).subscribe(sink);
-                });
+                    unsubs[1] = fn(x).subscribe(next);
+                }, error, complete);
 
                 return () => unsubs.forEach(runFn);
             })
         },
 
-        startWith: v => create(sink => {
-            sink(v);
-            return executor(sink);
+        startWith: v => create((next, error, complete) => {
+            next(v);
+            return executor(next, error, complete);
         }),
 
-        merge: stream2 => create(sink => {
+        merge: stream2 => create((next, error, complete) => {
             const unsubs = [
-                executor(sink),
-                stream2.subscribe(sink)
+                executor(next, error, complete),
+                stream2.subscribe(next, error, complete)
             ];
             return () => unsubs.forEach(runFn);
         }),
 
-        take: n => create(sink => {
+        take: n => create((next, error, complete) => {
             const unsub = executor(v => {
                 if (--n >= 0) {
-                    sink(v);
+                    next(v);
                 } else {
+                    complete();
                     runFn(unsub);
                 }
-            });
+            }, error, complete);
             return unsub;
         }),
 
         combine: (fn, ...streams) => {
-            return create(sink => {
+            return create(next => {
                 const values = [];
                 const clb = i => val => {
                     values[i] = val;
                     if (values.filter(isDefined).length === streams.length + 1) {
-                        sink(fn(...values));
+                        next(fn(...values));
                     }
                 };
                 const unsubs = [executor(clb(0))].concat(streams.map((s, i)=> s.subscribe(clb(i + 1))));
@@ -123,11 +139,11 @@ export function create(executor) {
 
         zip: (fn, ...streams) => {
             const values = Array.from({length: streams.length + 1}, () => []);
-            return create(sink => {
+            return create(next => {
                 const clb = i => val => {
                     values[i].push(val);
                     if (values.map(first).filter(isDefined).length === streams.length + 1) {
-                        sink(fn(...values.map(arr => arr.shift())));
+                        next(fn(...values.map(arr => arr.shift())));
                     }
                 };
                 const unsubs = [executor(clb(0))].concat(streams.map((s, i) => s.subscribe(clb(i + 1))));
