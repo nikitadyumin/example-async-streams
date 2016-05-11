@@ -39,3 +39,29 @@ declare function fromPromise<T>(promise:Promise):Observable<T>;
 declare function fromIterable(it:Iterable):Observable;
 declare function interval<T>(t: number, v:T):Observable<T>;
 ```
+
+Examples
+```javascript
+const noop = () => {};
+stream.create(sink => {
+    sink(1);
+    sink(2);
+    sink(3);
+    return noop;
+}).map(x=>x)
+    .flatMap(x => stream.just(1))
+    .filter(x =>    x)
+    .scan((x, y) => x + y, true)
+    .subscribe(v=> console.log(v));
+
+stream.just(1).merge(stream.just(2), stream.just(3), stream.just(4))
+    .subscribe(v=> console.log(v));
+
+stream.just(1).combine((a, b, c, d) => [a, b, c, d], stream.just(2), stream.just(3), stream.just(4))
+    .subscribe(v=> console.log(v));
+
+stream.just(1).zip((a, b, c) => [a, b, c], stream.just('2'), stream.just(3))
+    .subscribe(v=> console.log(v));
+
+stream.just(1).filter(x => x).subscribe(noop);
+```
