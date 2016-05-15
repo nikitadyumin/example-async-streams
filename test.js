@@ -1,7 +1,7 @@
 "use strict";
 
 import test from 'ava';
-import {just, interval} from './dist/streams';
+import {just, interval, fromEvent} from './dist/streams';
 
 test('just factory', t => {
     just(1).subscribe(v => t.is(1, v));
@@ -23,4 +23,41 @@ test('interval', async t => {
             });
     });
     t.is(await p, 369);
+});
+
+test('fromEvent', t => {
+    const el = {
+        addEventListener: (event, clb) => {
+            setTimeout(clb, 0, 1234);
+        },
+        removeEventListener: (event, clb) => {
+
+        }
+    };
+    function test(v) {
+        t.is(v, 1234);
+    }
+    fromEvent(el, 'event').subscribe(test)
+});
+
+test('fromEvent interval', async t => {
+    const result = new Promise((res, rej) => {
+        let i = 0;
+        let interval = null;
+        const el = {
+            addEventListener: (event, clb) => {
+                interval = setInterval(clb, 5, 1);
+            },
+            removeEventListener: (event, clb) => {
+                clearInterval(interval);
+            }
+        };
+        function test(v) {
+            i += v;
+        }
+        const sub = fromEvent(el, 'event').subscribe(test);
+        setTimeout(sub, 15);
+        setTimeout(() => res(i), 20);
+    });
+    t.is(await result, 2);
 });
