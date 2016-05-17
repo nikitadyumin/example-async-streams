@@ -1,7 +1,7 @@
 "use strict";
 
 import test from 'ava';
-import {just, interval, fromEvent, fromPromise} from './dist/streams';
+import {just, interval, fromEvent, fromPromise, fromIterable} from './dist/streams';
 
 test('just factory', t => {
     just(1).subscribe(v => t.is(1, v));
@@ -75,4 +75,19 @@ test('fromPromise/fail', async t => {
             .subscribe(res, rej);
     }).catch(e => t.is(e, 123))
 
+});
+
+test('fromIterable/array', async t => {
+    const result = new Promise((res, rej) => {
+        const result = [];
+        function test(v) {
+            result.push(v);
+            if (result.length === 3) {
+                res(result);
+            }
+        }
+        fromIterable([1,2,3]).subscribe(test);
+    });
+
+    t.deepEqual(await result, [1,2,3]);
 });
