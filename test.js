@@ -91,3 +91,23 @@ test('fromIterable/array', async t => {
 
     t.deepEqual(await result, [1,2,3]);
 });
+
+test('fromIterable/gen', async t => {
+    function *gen() {
+        yield 1;
+        yield 2;
+        yield 3;
+    }
+    const result = new Promise((res, rej) => {
+        const result = [];
+        function test(v) {
+            result.push(v);
+            if (result.length === 3) {
+                res(result);
+            }
+        }
+        fromIterable(gen()).subscribe(test);
+    });
+
+    t.deepEqual(await result, [1,2,3]);
+});
